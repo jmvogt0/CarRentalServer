@@ -167,7 +167,8 @@ module.exports = function (app) {
           {$project: {_id: 1, name: 1}}
 
       ])*/
-      let rented = await Rental.find({ "rented.userId": req.user.id }, { _id: 1, 'rented.$': 1 });
+      //Änderung hier um auch Infos der Autos zu bekommen
+      let rented = await Rental.find({ "rented.userId": req.user.id });
       res.status(200).send(rented);
     } catch (error) {
       let errorObj = { body: req.body, errorMessage: "Server error!" };
@@ -195,6 +196,7 @@ module.exports = function (app) {
   app.post('/carrental/rental/', verifyToken, function (req, res) {
     try {
       let rentalData = req.body
+      //rentalData.owner = req.user.id - da sonst die UserID nicht vorhnaden ist
       rentalData.owner = req.user.id;
       rentalData.rentedLength = 0;
       let rental = new Rental(rentalData);
@@ -213,15 +215,14 @@ module.exports = function (app) {
     }
   });
 
-
+  // Auto mieten
   app.post('/carrental/rent/', verifyToken, async function (req, res) {
     try {
       let rentData = req.body;
       let rentalId = rentData.rentalId;
       delete rentData.rentalId;
-      console.log('user:', req.user.id);
+      //rentData.userId = req.user.id - da sonst die UserID nicht vorhnaden ist
       rentData.userId = req.user.id;
-      //let rent = new Rented(rentData);
       let rental = await Rental.findById(rentalId);
       rental.rented.push(rentData)
       rental.rentedLength = rental.rentedLength + 1;
